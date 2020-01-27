@@ -69,10 +69,11 @@ class Manager:
             print("map_num: ", num+1, ", attempt: ", attempt_num, ", new_fields = ", self.field_count, ", wins=", iter_wins_count, ", alpha = {:8.6f}".format(self.alpha))
           else:
             print("Iteration: ", it, ", tid: ", self.tid, ", new_fields = ", self.field_count, ", wins=", iter_wins_count, ", alpha = {:8.6f}".format(self.alpha))
-
+          
           self.alpha -= self.delta
           if self.alpha < 0.01: self.alpha = 0.01
 
+          
           #self.db_conn.commit()  # записать изменения в базу
 
       self.total_games_count += iter_games_count

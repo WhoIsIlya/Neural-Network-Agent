@@ -268,7 +268,8 @@ class NAgent:
     self.xs.append(x)  # observation
     self.hs.append(h)  # hidden state
     yvec = self.__y_to_yvec__(curr_act)
-    #self.dlogps.append(yvec - ynet)  # grad that encourages the action that was taken to be take
+    m = ynet
+    self.dlogps.append(m)  # grad that encourages the action that was taken to be take
 
     return curr_act
 
