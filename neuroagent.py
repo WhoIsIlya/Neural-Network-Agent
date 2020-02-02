@@ -370,10 +370,12 @@ class NAgent:
           i_mass = 0
           j_mass = 0
           while i_mass<1024:
-              while j_mass<40:
-                  g[i][j] = g_big[i_mass][j_mass]
-                  i_mass += i_mass
-                  j_mass += j_mass
+            while j_mass<40:
+              g[i_mass][j_mass] = g_big[i_mass][j_mass]
+              i_mass += 1
+              j_mass += 1
+            j_mass = 0
+         
 
           rmsprop_cache[k] = decay_rate * rmsprop_cache[k] + (1 - decay_rate) * g**2
           model[k] += learning_rate * g / (np.sqrt(rmsprop_cache[k]) + 1e-5)
