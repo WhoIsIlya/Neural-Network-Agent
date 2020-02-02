@@ -39,7 +39,7 @@ nnet_parms = [nnet_filename, inp_N, hidden_N, out_N]
 nagent = neuroagent.NAgent(sess_parms, nnet_parms)
 
 # параметры обучения нейросети
-alpha = 1.0 # фактор обучения
+alpha = 0.01 # фактор обучения
 gamma = 0.9 # фактор дисконтирования
 delta = 0.00001# коэф-т уменьшения alpha
 batch_size = 10
@@ -48,7 +48,7 @@ map_numbers1 = list(range(1,251))
 map_numbers2  = random.sample(map_numbers1, 50)
 map_numbers = [1]
 
-attempts_per_map = 2 # количество попыток на каждую карту
+attempts_per_map = 30 # количество попыток на каждую карту
 
 # запуск обучения ===================================================
 map_parms = [map_numbers, attempts_per_map]
