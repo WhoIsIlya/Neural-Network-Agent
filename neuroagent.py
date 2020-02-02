@@ -367,13 +367,13 @@ class NAgent:
         for k,v in grad.items():
           g = np.zeros((1024,40))
           g_big = grad_buffer[k]
-          i = 0
-          j = 0
+          i_mass = 0
+          j_mass = 0
           while i_mass<1024:
               while j_mass<40:
-                  g[i][j] = g_big[i][j]
-                  i += i
-                  j += j
+                  g[i][j] = g_big[i_mass][j_mass]
+                  i_mass += i_mass
+                  j_mass += j_mass
 
           rmsprop_cache[k] = decay_rate * rmsprop_cache[k] + (1 - decay_rate) * g**2
           model[k] += learning_rate * g / (np.sqrt(rmsprop_cache[k]) + 1e-5)
