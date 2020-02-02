@@ -4,6 +4,8 @@ import numpy as np
 import random as rnd
 import functions
 import pandas as pd
+import copy
+import manager
 
 class NAgent:
 
@@ -16,6 +18,8 @@ class NAgent:
   prev_score = None
   prev_hash = None
   prev_weights_dict = None
+
+
 
   xs, hs, dlogps, drs = [], [], [], []
 
@@ -229,16 +233,36 @@ class NAgent:
   # преобразуем символьный хэш в числовой входной вектор для нейросети
   def __hash2vec__(self, curr_hash):
     vec = np.zeros(len(curr_hash))
-    #...
-    slit_str = list(curr_hash)
-    slit_str = (' '.join(list(slit_str)))
-    vec = [int(x) for x in slit_str.split()]
+    split_str = list(curr_hash)
+    split_str = (' '.join(list(split_str)))
+    vec = [int(x) for x in split_str.split()]
+
 
     return vec
 
   # строит вектор one-hot в зависимости от выбранного действия (100000000 - для 'take')
-  def __y_to_yvec__(self, curr_act):
-    pass
+  def __act_to_yvec__(self, curr_act):
+    act_yvec = np.zeros(9)
+    if curr_act == "take":
+      act_yvec[0] = 1
+    if curr_act == "go_forward":
+      act_yvec[1] = 1
+    if curr_act == "go_right":
+      act_yvec[2] = 1
+    if curr_act == "go_back":
+      act_yvec[3] = 1
+    if curr_act == "go_left":
+      act_yvec[4] = 1
+    if curr_act == "shoot_forward":
+      act_yvec[5] = 1
+    if curr_act == "shoot_right":
+      act_yvec[6] = 1
+    if curr_act == "shoot_back":
+      act_yvec[7] = 1
+    if curr_act == "shoot_left":
+      act_yvec[8] = 1
+
+    return act_yvec
 
   # выбираем для текущего состояния c curr_hash ход,
   # если состояние новое, то добавляем его в базу политики (полезностей) +4
@@ -267,8 +291,8 @@ class NAgent:
     # record various intermediates (needed later for backprop)
     self.xs.append(x)  # observation
     self.hs.append(h)  # hidden state
-    yvec = self.__y_to_yvec__(curr_act)
-    m = ynet
+    yvec = self.__act_to_yvec__(curr_act)
+    m = yvec - ynet
     self.dlogps.append(m)  # grad that encourages the action that was taken to be take
 
     return curr_act
@@ -298,11 +322,54 @@ class NAgent:
 
     # нормируем дисконтированные веса
     # standardize the rewards to be unit normal (helps control the gradient estimator variance)
+    
+    decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
+    learning_rate = manager.Manager.alpha
     discounted_r -= np.mean(discounted_r)
     discounted_r /= np.std(discounted_r)
+
+    epx = np.vstack(self.xs)
+    eph = np.vstack(self.hs)
+    epdlogp = np.vstack(self.dlogps)
+    epr = np.zeros(int(epdlogp.size/9))
+    xs,hs,dlogps,drs = [],[],[],[] # reset array memory
+    
+    i = 0
+    while i < discounted_r.size:
+        epr[i] = discounted_r[i]
+        i += 1
+    
+    epr = np.array([epr, epr, epr, epr, epr, epr, epr, epr ,epr])
+    epr = np.transpose(epr)
+    epdlogp *= epr
+
+    model = self.nnet
+    grad = functions.policy_backward(model, epx, eph, epdlogp)
+
+    
+    grad_buffer = { k : np.zeros_like(v) for k,v in grad.items() }
+    rmsprop_cache = { k : np.zeros_like(v) for k,v in model.items() } # rmsprop memory
+    
+
+    for k in model: grad_buffer[k] += grad[k]
+
+    
+
+    #discounted_epr = self.__discount_rewards__(epr)
+    #discounted_epr -= np.mean(discounted_epr)
+    #discounted_epr /= np.std(discounted_epr)
+    
+
 
     for actnum in range(self.episode.shape[0]):
       #...
       if (actnum+1) % batch_size == 0:
-        # организуем корректировку весов нейросети для очередного пакета
+        for k,v in grad.items():
+          g = np.zeros((1024,40))
+          g_big = grad_buffer[k]
+          g = np.copyto(g, g_big)
+
+          rmsprop_cache[k] = decay_rate * rmsprop_cache[k] + (1 - decay_rate) * g**2
+          model[k] += learning_rate * g / (np.sqrt(rmsprop_cache[k]) + 1e-5)
+
         pass
