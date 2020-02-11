@@ -73,7 +73,7 @@ class Manager:
           self.alpha -= self.delta
           if self.alpha < 0.01: self.alpha = 0.01
 
-          
+          qa.__saveNnet__()
           #self.db_conn.commit()  # записать изменения в базу
 
       self.total_games_count += iter_games_count

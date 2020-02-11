@@ -4,6 +4,7 @@ import requests as req
 import numpy as np
 import pickle
 import os
+import copy
 
 # работа с сервером ===========================================================
 
@@ -121,16 +122,18 @@ def policy_forward(model, x):
   h = np.dot(model['W1'], x)
   h[h<0] = 0 # ReLU nonlinearity
   logp = np.dot(model['W2'], h)
+  logp = (logp - logp.min())/np.ptp(logp) 
   p = sigmoid(logp)
   return p, h # return probability of taking action 2, and hidden state
 
-def policy_backward(model, epx, eph, epdlogp):
-  """ backward pass. (eph is array of intermediate hidden states) """
-  dW2 = np.dot(eph.T, epdlogp).ravel()
-  dh = np.outer(epdlogp, model['W2'])
-  #dh[eph <= 0] = 0 # backpro prelu
-  epx = np.array([epx,epx,epx,epx,epx,epx,epx,epx,epx])
-  epx = np.reshape(epx,(int(epx.size/40),40))
-  dW1 = np.dot(dh.T, epx)
+def policy_backward(model, a_xs, a_hs, a_zerrs):
+  """ backward pass.
+  a_xs - is array of nnet input
+  a_hs - is array of intermediate hidden states
+  a_zerrs - is array of z - errors, multiplied on discount_r
+  """
+  dW2 = np.dot(a_zerrs.T, a_hs)
+  dh = np.dot(a_zerrs, model['W2'])
+  dh[a_hs <= 0] = 0 # backpro prelu
+  dW1 = np.dot(dh.T, a_xs)
   return {'W1':dW1, 'W2':dW2}
-
