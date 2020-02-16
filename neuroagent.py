@@ -21,11 +21,11 @@ class NAgent:
   prev_weights_dict = None
   decay_rate = 0.95  # decay factor for RMSProp leaky sum of grad^2
 
-  alpha = 0.1 # learning rate
-  gamma = 0.9 # discount coef
+  alpha = 0.01 # learning rate
+  gamma = 0.51 # discount coef
   delta = 0.0001 # LR descent coef
   batch_size = 10
-  help_degree = 0.9 # part of help of correct weights
+  help_degree = 0.2 # part of help of correct weights
   dropout = 0.5 # part of neurons in hidden layers to dropout
 
   xs, hs, h2s, errs, zs, rs = [], [], [], [], [], []
@@ -294,7 +294,7 @@ class NAgent:
 
     if rnd.random() < self.help_degree:
       # корректируем веса для очевидных случаев
-      weights = list(self.__correctWeights__(np.array(ynet), curr_hash))
+      weights = list(self.__correctWeights__(np.array(ynet).copy(), curr_hash))
     else:
       weights = list(ynet)
 
@@ -377,24 +377,7 @@ class NAgent:
 
     if self.gamesQ % self.batch_size == 0: # корректировка весов - метод rmsprop
       for k, v in self.nnet.items():
-        for k,v in gradW.items():
-          g_big = self.grad_buffer[k]
-          i_mass = 0
-          j_mass = 0
-          if k == "W1":
-              g = np.zeros((1024,40))
-              while i_mass<1024:
-                while j_mass<40:
-                  g[i_mass][j_mass] = g_big[i_mass][j_mass]
-                  j_mass += 1
-                i_mass += 1
-                j_mass = 0
-          if k == "W2":
-              g = np.zeros((1024,9))
-              while i_mass<1024:
-                    g[i_mass] = g_big[i_mass]
-                    i_mass += 1
-              g = np.transpose(g)
-          self.rmsprop_cache[k] = self.decay_rate * self.rmsprop_cache[k] + (1 - self.decay_rate) * g ** 2
-          self.nnet[k] += self.alpha * g / (np.sqrt(self.rmsprop_cache[k]) + 1e-5)
-          self.grad_buffer[k] = np.zeros_like(v)  # reset batch gradient buffer
+        g = self.grad_buffer[k]  # gradient
+        self.rmsprop_cache[k] = self.decay_rate * self.rmsprop_cache[k] + (1 - self.decay_rate) * g ** 2
+        self.nnet[k] += self.alpha * g / (np.sqrt(self.rmsprop_cache[k]) + 1e-5)
+        self.grad_buffer[k] = np.zeros_like(v)  # reset batch gradient buffer

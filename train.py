@@ -18,7 +18,7 @@ import urllib3
 # 11        L-3-2 (Поиск клада. Неизвестный Лабиринт. без обвалов, 1 монстр)
 # 12        L-4-2 (Поиск клада. Неизвестный Лабиринт. 1 обвал. 1 монстр.)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-case_id = 2 # id кейса задачи
+case_id = 12 # id кейса задачи
 user_id = 30761 # id пользователя
 tid = 0
 hashid = 0
@@ -30,7 +30,7 @@ agent_name = "garry_007" # название агента
 
 # параметры нейросети
 inp_N = 40  # кол-во чисел, описывающих состояние игры
-hidden_N = 1024   # произвольно подбираемое число
+hidden_N = 120   # произвольно подбираемое число
 out_N = 9       # кол-во возможных действий агента
 nnet_filename = data_path + agent_name + '.nn'
 nnet_parms = [nnet_filename, inp_N, hidden_N, out_N]
@@ -39,16 +39,16 @@ nnet_parms = [nnet_filename, inp_N, hidden_N, out_N]
 nagent = neuroagent.NAgent(sess_parms, nnet_parms)
 
 # параметры обучения нейросети
-alpha = 0.09 # фактор обучения
-gamma = 0.9 # фактор дисконтирования
+alpha = 0.1# фактор обучения
+gamma = 0.51 # фактор дисконтирования
 delta = 0.00001# коэф-т уменьшения alpha
 batch_size = 10
 
-#map_numbers = list(range(1,251))
+#map_numbers = list(range(1,200))
 #map_numbers  = random.sample(map_numbers1, 50)
-map_numbers = [1]
+map_numbers = [1,2,3,4,5,6,7,8,9]
 
-attempts_per_map = 100 # количество попыток на каждую карту
+attempts_per_map = 10 # количество попыток на каждую карту
 
 # запуск обучения ===================================================
 map_parms = [map_numbers, attempts_per_map]
